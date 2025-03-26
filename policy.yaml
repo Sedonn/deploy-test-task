@@ -1,0 +1,12 @@
+# VK Cloud рекомендует использовать PDB для отказоустойчивости
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-app-pdb
+  environment: production
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: web-app

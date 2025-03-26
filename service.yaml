@@ -1,0 +1,17 @@
+# Добавим ClusterIP для ingress-controller и для доступа из кластера
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: web-app-namespace
+  name: web-app-service
+  labels:
+    app: web-app
+    environment: production
+spec:
+  selector:
+    app: web-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
