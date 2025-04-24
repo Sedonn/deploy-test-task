@@ -3,15 +3,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: web-app-namespace
-  name: web-app-service
-  labels:
-    app: web-app
-    environment: production
+  name: {{ .Release.Name }}-service
 spec:
   selector:
-    app: web-app
+    app: {{ .Release.Name }}
+  {{- with .Values.app.container }}
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 8080
+      port: {{ .ports.web }}
+      targetPort: {{ .ports.web }}
+  {{- end }}

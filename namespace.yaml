@@ -1,9 +1,0 @@
-# Namespace для нашего приложения и всех его частей в production окружении
-
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: web-app-namespace
-  labels:
-    app: web-app
-    environment: production

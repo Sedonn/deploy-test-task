@@ -1,0 +1,31 @@
+app:
+  container:
+    name: web
+    image:
+      name: web-app
+      tag: v0.1
+    ports:
+      web: 8080
+      probes: 8080
+    # Определяем ресурсы
+    # Возьмем QoS: Burstable, так как нагрузка в начале может вырасти и нам нужно гарантированно увеличить ресурсы
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 100m
+      limits:
+        memory: 128Mi
+        cpu: 1000m
+
+  # Необходимое количество реплик с учетом нагрузочных тестов
+  replicas: 4
+  # Предположим, что у приложения есть переменные окружения
+  env:
+    secretData:
+      SOME_ENV_1: env_value1
+      SOME_ENV_2: env_value2
+
+  # Ingress ресурс для доступа к приложению из глобальной сети
+  ingress:
+    enabled: true
+    domain: web-app.cloud.ru

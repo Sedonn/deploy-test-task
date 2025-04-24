@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment
+spec:
+  replicas: {{ .Values.app.replicas }}
+  # Стратегия обновления
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        {{- with .Values.app.container }}
+        - name: {{ .name | quote }}
+          image: "{{ .image.name }}:{{ .image.tag }}"
+          ports:
+            {{- range $port, $number := .ports }}
+            - containerPort: {{ $number }}
+              name: {{ $port }}
+            {{- end }}
+          # Пробрасываем env-переменные
+          envFrom:
+            - secretRef:
+                name: {{ $.Release.Name }}-env
+          # Монтируем конфигурацию
+          volumeMounts:
+            - name: {{ $.Release.Name }}-config-volume
+              mountPath: /etc/config.yaml
+              subPath: config.yaml
+          resources: {{ .resources | toYaml | nindent 11 }}
+          # Регулярно проверяем после запуска живо ли приложение
+          livenessProbe:
+            httpGet:
+              path: /healthz/live
+              port: {{ .ports.probes }}
+            initialDelaySeconds: 3
+            periodSeconds: 2
+          # Так как в начале большая нагрузка, используем эту пробу, чтобы Kubernetes не думал, что у нас упал Pod
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: {{ .ports.probes }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          # Чтобы не было CrashLoop из за долгого запуска, используем эту пробу
+          startupProbe:
+            httpGet:
+              path: /healthz/live
+              port: {{ .ports.probes }}
+            failureThreshold:  10
+            periodSeconds: 5
+        {{- end }}
+      # Монтируем конфиг
+      volumes:
+        - name: {{ .Release.Name }}-config-volume
+          configMap:
+            name: {{ .Release.Name }}-config
